@@ -160,3 +160,7 @@ API 계약은 API-SPEC.md에 기록하고, 계약을 바꾸는 작업은 API-SPE
   참고: 테스트 브라우저에는 이모지 글꼴이 없어 그림 문자가 네모로 보였다(Windows 브라우저에서는 정상 표시 예상).
 - [ ] R23: 배포 반영(설치 스크립트가 R18 변경을 실제 DB에 적용)과 실제 환경 통합 확인.
   확인: 기존 20곳이 첫 가입 계정에 붙음, 8080에서 가입·로그인·추천, API 재시작 후 로그인·데이터 유지.
+  기록(2026-10-14, 진행 중): install-api.sh를 git archive(HEAD의 backend·requirements.txt)로 설치하도록 변경, install-web.sh는 frontend 미커밋 변경·오래된 빌드면 멈춤.
+  사전 확인: 빌드 결과를 임시 Nginx(18080)+임시 API(8011)로 R21·R13·R06 19개 통과.
+  남은 일: 사용자가 sudo로 install-api.sh(실제 DB에 users·sessions 생성, restaurants.owner_id 추가)·install-web.sh 실행 →
+  사용자 본인 계정을 먼저 가입(기존 20곳 연결) → 실제 8080에서 확인.
