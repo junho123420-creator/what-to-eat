@@ -10,6 +10,7 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 
 from .database import SessionLocal
+from .defaults import default_rows
 from .models import RestaurantRow, SessionRow, UserRow, utc_now
 from .schemas import User
 
@@ -49,7 +50,8 @@ def token_hash(token: str) -> str:
 
 class AuthStore:
     def signup(self, username: str, password: str) -> User | None:
-        """가입한 User, 아이디가 이미 있으면 None. 처음 가입한 계정이면 작성자 없는 식당을 그 계정에 붙인다(F20)."""
+        """가입한 User, 아이디가 이미 있으면 None.
+        처음 가입한 계정이면 작성자 없는 식당을 그 계정에 붙이고(F20), 그 밖의 계정에는 기본 맛집 목록을 넣는다(F22)."""
         with SessionLocal() as session:
             user = UserRow(username=username, password_hash=hash_password(password))
             session.add(user)
@@ -58,9 +60,15 @@ class AuthStore:
             except IntegrityError:
                 session.rollback()
                 return None
+            claimed = 0
             first_id = session.scalar(select(func.min(UserRow.id)))
             if user.id == first_id:
-                session.execute(update(RestaurantRow).where(RestaurantRow.owner_id.is_(None)).values(owner_id=user.id))
+                claimed = session.execute(
+                    update(RestaurantRow).where(RestaurantRow.owner_id.is_(None)).values(owner_id=user.id)
+                ).rowcount
+            # 기존 식당을 받지 않은 계정에는 기본 맛집 목록을 넣는다(F22). 가입과 같은 트랜잭션이라 함께 저장된다.
+            if not claimed:
+                session.add_all(default_rows(user.id))
             session.commit()
             return User.model_validate(user)
 

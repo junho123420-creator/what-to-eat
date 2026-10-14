@@ -38,10 +38,14 @@ class Client:
                 raw = error.read()
             return error.code, json.loads(raw) if raw else None
 
-    def signup_and_login(self, prefix="t"):
+    def signup_and_login(self, prefix="t", keep_defaults=False):
+        """새 계정으로 로그인한다. 다른 테스트가 빈 목록에서 시작하도록 기본 맛집(F22)은 지운다."""
         username = f"{prefix}_{time.time_ns() % 10**12}"
         assert self.call("POST", "/api/auth/signup", {"username": username, "password": PASSWORD})[0] == 201
         assert self.call("POST", "/api/auth/login", {"username": username, "password": PASSWORD})[0] == 200
+        if not keep_defaults:
+            for item in self.call("GET", "/api/restaurants")[1]:
+                assert self.call("DELETE", f"/api/restaurants/{item['id']}")[0] == 204
         return username
 
 
@@ -341,6 +345,37 @@ class RecommendationCategoryTest(unittest.TestCase):
             with self.subTest(value=value):
                 self.assertEqual(call("GET", "/api/recommendation", query={"category": value}),
                                  (422, {"detail": "음식 종류가 올바르지 않습니다."}))
+
+
+class DefaultRestaurantsTest(unittest.TestCase):
+    """R25: 가입 시 기본 맛집 목록(F22)"""
+
+    with open(os.path.join(os.path.dirname(__file__), "..", "backend", "default_restaurants.json"), encoding="utf-8") as f:
+        DEFAULTS = json.load(f)
+
+    def test_new_user_gets_defaults(self):
+        a, b = Client(), Client()
+        a.signup_and_login("da", keep_defaults=True)
+        b.signup_and_login("db", keep_defaults=True)
+        items = a.call("GET", "/api/restaurants")[1]
+        self.assertEqual([r["name"] for r in items], [d["name"] for d in self.DEFAULTS])
+        first = items[0]
+        expected = self.DEFAULTS[0]
+        for key in ("category", "price_range", "location_note", "map_url", "memo"):
+            self.assertEqual(first[key], expected[key])
+        self.assertEqual((first["visit_status"], first["rating"]), ("WANT", None))
+        self.assertEqual(len(a.call("GET", "/api/recommendation", query={"exclude_days": 0})[1]["candidates"]),
+                         len(self.DEFAULTS))
+        # 내 복사본을 고치거나 지워도 다른 계정의 기본 맛집은 그대로다.
+        a.call("PATCH", f"/api/restaurants/{first['id']}", {"visit_status": "VISITED", "rating": 5, "memo": "A 수정"})
+        a.call("DELETE", f"/api/restaurants/{items[1]['id']}")
+        self.assertEqual(len(a.call("GET", "/api/restaurants")[1]), len(self.DEFAULTS) - 1)
+        theirs = b.call("GET", "/api/restaurants")[1]
+        self.assertEqual(len(theirs), len(self.DEFAULTS))
+        self.assertEqual((theirs[0]["memo"], theirs[0]["visit_status"]), (expected["memo"], "WANT"))
+        self.assertNotEqual(theirs[0]["id"], first["id"])
+        # 직접 등록도 그대로 된다.
+        self.assertEqual(a.call("POST", "/api/restaurants", {"name": "내가 추가"})[0], 201)
 
 
 class AuthTest(unittest.TestCase):
