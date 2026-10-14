@@ -15,14 +15,18 @@ def is_recently_visited(restaurant: Restaurant, exclude_days: int, today: date) 
     return (today - restaurant.last_visited_on).days < exclude_days
 
 
-def recommend(restaurants: list[Restaurant], exclude_days: int, today: date,
+def recommend(restaurants: list[Restaurant], exclude_days: int, today: date, category: str | None = None,
               rng: random.Random | None = None) -> Recommendation:
-    """후보 중 하나를 같은 확률로 뽑는다. 후보가 없으면 이유를 알려 준다."""
-    candidates = [r for r in restaurants if not is_recently_visited(r, exclude_days, today)]
+    """음식 종류(F21)와 최근 방문 제외(F12)를 AND로 적용한 후보 중 하나를 같은 확률로 뽑는다. 후보가 없으면 이유를 알려 준다."""
+    in_category = [r for r in restaurants if category is None or r.category == category]
+    candidates = [r for r in in_category if not is_recently_visited(r, exclude_days, today)]
     reason = None
     if not restaurants:
         reason = "NO_RESTAURANTS"
+    elif not in_category:
+        reason = "NO_CATEGORY_RESTAURANTS"
     elif not candidates:
         reason = "ALL_RECENTLY_VISITED"
     picked = (rng or random).choice(candidates) if candidates else None
-    return Recommendation(exclude_days=exclude_days, today=today, candidates=candidates, picked=picked, reason=reason)
+    return Recommendation(exclude_days=exclude_days, category=category, today=today, candidates=candidates,
+                          picked=picked, reason=reason)

@@ -131,16 +131,18 @@ R17(2026-10-14)부터 로그인이 필요하고, 식당·추천 API는 로그인
 ## GET /api/recommendation  (R12)
 - 쿼리 `exclude_days`: `0`(제외 안 함), `3`, `7`, `14` 중 하나. 기본 `7`(F12).
   그 외 값(`7.0`, `-7` 포함)은 422 `{"detail": "최근 방문 제외 기간은 0, 3, 7, 14일 중 하나여야 합니다."}`.
-- 후보: 로그인한 사용자가 저장한 식당 중 `last_visited_on`이 null이거나, 오늘과의 차이가 `exclude_days`일 이상인 식당.
+- 쿼리 `category`(R24, F21): 음식 종류 하나(`KOREAN` 등). 생략하거나 빈 값이면 전체. 그 외 값은 422.
+- 후보: 로그인한 사용자가 저장한 식당 중 (category를 고르면 그 종류만) `last_visited_on`이 null이거나, 오늘과의 차이가 `exclude_days`일 이상인 식당.
   예: `exclude_days=7`, 오늘 10-14 → 10-08~10-14 방문은 제외, 10-07 이전 방문과 방문일 없음은 후보.
 - 서버가 후보 중 하나를 같은 확률로 뽑는다(F11, 결정 2026-10-14). 결과는 저장하지 않는다.
 - 응답 200:
 ```json
-{ "exclude_days": 7, "today": "2026-10-14", "candidates": [Restaurant, ...], "picked": Restaurant, "reason": null }
+{ "exclude_days": 7, "category": null, "today": "2026-10-14", "candidates": [Restaurant, ...], "picked": Restaurant, "reason": null }
 ```
 - 후보가 없으면 `picked`는 null, `candidates`는 빈 배열이고 `reason`으로 이유를 알려 준다(F13):
   - `NO_RESTAURANTS`: 로그인한 사용자가 저장한 식당이 없음.
-  - `ALL_RECENTLY_VISITED`: 식당은 있지만 모두 제외 기간 안에 방문함.
+  - `NO_CATEGORY_RESTAURANTS`: 식당은 있지만 고른 음식 종류의 식당이 없음(R24).
+  - `ALL_RECENTLY_VISITED`: 조건에 맞는 식당은 있지만 모두 제외 기간 안에 방문함.
 - 화면은 `candidates` 이름으로 슬롯머신을 돌리고 `picked`에서 멈춘다(F14, F15).
 
 ## PRD 대응표
@@ -163,4 +165,5 @@ R17(2026-10-14)부터 로그인이 필요하고, 식당·추천 API는 로그인
 | F17 | POST /api/auth/login·logout, 같은 401 문구, 7일 고정 세션 쿠키 |
 | F18 | 로그인 필요 경로 401(화면은 시작 화면으로 전환) |
 | F19 | 식당·추천 API는 owner_id = 로그인 사용자만, 다른 사용자 식당 404 |
+| F21 | GET /api/recommendation category 조건, NO_CATEGORY_RESTAURANTS |
 | F20 | GET /api/auth/me(화면 아이디 표시), 첫 가입 계정에 작성자 없는 식당 연결 |

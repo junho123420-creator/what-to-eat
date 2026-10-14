@@ -312,6 +312,37 @@ class RecommendationApiTest(unittest.TestCase):
         self.assertEqual(call("GET", "/api/restaurants")[1], before)
 
 
+class RecommendationCategoryTest(unittest.TestCase):
+    """R24: 추천 음식 종류 조건(F21). 새 계정으로 다른 데이터와 섞이지 않게 확인한다."""
+
+    def test_category(self):
+        client = Client()
+        client.signup_and_login("cat")
+        today = date.today().isoformat()
+        korean = client.call("POST", "/api/restaurants", {"name": "한식A", "category": "KOREAN"})[1]["id"]
+        client.call("POST", "/api/restaurants", {"name": "한식최근", "category": "KOREAN",
+                                                 "visit_status": "VISITED", "last_visited_on": today})
+        client.call("POST", "/api/restaurants", {"name": "중식A", "category": "CHINESE"})
+        status, body = client.call("GET", "/api/recommendation", query={"category": "KOREAN"})
+        self.assertEqual((status, body["category"], [r["id"] for r in body["candidates"]]), (200, "KOREAN", [korean]))
+        self.assertEqual(body["picked"]["id"], korean)
+        both = client.call("GET", "/api/recommendation", query={"category": "KOREAN", "exclude_days": 0})[1]
+        self.assertEqual({r["name"] for r in both["candidates"]}, {"한식A", "한식최근"})
+        everything = client.call("GET", "/api/recommendation", query={"category": ""})[1]
+        self.assertEqual((everything["category"], len(everything["candidates"])), (None, 2))
+        self.assertEqual(client.call("GET", "/api/recommendation", query={"category": "JAPANESE"})[1]["reason"],
+                         "NO_CATEGORY_RESTAURANTS")
+        client.call("PATCH", f"/api/restaurants/{korean}", {"visit_status": "VISITED", "last_visited_on": today})
+        self.assertEqual(client.call("GET", "/api/recommendation", query={"category": "KOREAN"})[1]["reason"],
+                         "ALL_RECENTLY_VISITED")
+
+    def test_invalid_category(self):
+        for value in ["korean", "FAST", " KOREAN", "1"]:
+            with self.subTest(value=value):
+                self.assertEqual(call("GET", "/api/recommendation", query={"category": value}),
+                                 (422, {"detail": "음식 종류가 올바르지 않습니다."}))
+
+
 class AuthTest(unittest.TestCase):
     """R19: 회원가입·로그인·로그아웃·내 정보(F16~F18)"""
 

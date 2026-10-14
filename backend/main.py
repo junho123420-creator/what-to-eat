@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 
 from .auth import LOGIN_FAILED, SESSION_COOKIE, SESSION_MAX_AGE, USERNAME_TAKEN, auth_store, current_user
+from .models import CATEGORIES
 from .recommend import EXCLUDE_DAY_OPTIONS, recommend
 from .schemas import (
     Category,
@@ -30,6 +31,7 @@ logger = logging.getLogger(__name__)
 DATABASE_ERROR = "DB에 연결할 수 없거나 처리 중 오류가 발생했습니다."
 RESTAURANT_NOT_FOUND = "식당을 찾을 수 없습니다."
 EXCLUDE_DAYS_INVALID = "최근 방문 제외 기간은 0, 3, 7, 14일 중 하나여야 합니다."
+CATEGORY_INVALID = "음식 종류가 올바르지 않습니다."
 
 
 @app.exception_handler(SQLAlchemyError)
@@ -121,10 +123,15 @@ def delete_restaurant(restaurant_id: int, user: Annotated[User, Depends(current_
 
 
 @app.get("/api/recommendation")
-def get_recommendation(user: Annotated[User, Depends(current_user)], exclude_days: str = "7") -> Recommendation:
-    """최근 방문한 곳을 뺀 후보 중 하나를 같은 확률로 추천한다(F11~F13). 결과는 저장하지 않는다."""
+def get_recommendation(
+    user: Annotated[User, Depends(current_user)], exclude_days: str = "7", category: str = ""
+) -> Recommendation:
+    """음식 종류(F21)와 최근 방문 제외(F12)에 맞는 후보 중 하나를 같은 확률로 추천한다(F11~F13). 결과는 저장하지 않는다."""
     # "7.0"·" 7" 같은 값도 거절하도록 쿼리 문자열을 그대로 비교한다.
     allowed = {str(days): days for days in EXCLUDE_DAY_OPTIONS}
     if exclude_days not in allowed:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=EXCLUDE_DAYS_INVALID)
-    return recommend(store.list(user.id), allowed[exclude_days], date.today())
+    # 빈 값은 전체. 그 외에는 음식 종류 값과 정확히 같아야 한다.
+    if category and category not in CATEGORIES:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=CATEGORY_INVALID)
+    return recommend(store.list(user.id), allowed[exclude_days], date.today(), category or None)

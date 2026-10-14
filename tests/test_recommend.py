@@ -13,10 +13,10 @@ from backend.schemas import Restaurant
 TODAY = date(2026, 10, 14)
 
 
-def restaurant(rid, visited_days_ago=None):
+def restaurant(rid, visited_days_ago=None, category="ETC"):
     last = None if visited_days_ago is None else TODAY - timedelta(days=visited_days_ago)
     now = datetime(2026, 10, 14)
-    return Restaurant(id=rid, name=f"식당{rid}", category="ETC", price_range=None,
+    return Restaurant(id=rid, name=f"식당{rid}", category=category, price_range=None,
                       visit_status="WANT" if last is None else "VISITED", rating=None, last_visited_on=last,
                       location_note="", map_url="", memo="", created_at=now, updated_at=now)
 
@@ -48,10 +48,37 @@ class RecommendTest(unittest.TestCase):
     def test_uniform(self):
         items = [restaurant(1), restaurant(2), restaurant(3), restaurant(4, 0)]
         rng = random.Random(20261014)
-        counts = Counter(recommend(items, 7, TODAY, rng).picked.id for _ in range(6000))
+        counts = Counter(recommend(items, 7, TODAY, rng=rng).picked.id for _ in range(6000))
         self.assertEqual(set(counts), {1, 2, 3})
         for rid in (1, 2, 3):
             self.assertAlmostEqual(counts[rid] / 6000, 1 / 3, delta=0.03)
+
+
+class CategoryTest(unittest.TestCase):
+    """R24: 음식 종류 조건(F21)"""
+
+    items = [restaurant(1, category="KOREAN"), restaurant(2, 0, "KOREAN"), restaurant(3, category="CHINESE"),
+             restaurant(4, 10, "KOREAN")]
+
+    def test_category_and_exclude(self):
+        result = recommend(self.items, 7, TODAY, "KOREAN")
+        self.assertEqual(([r.id for r in result.candidates], result.category), ([1, 4], "KOREAN"))
+        self.assertIn(result.picked.id, [1, 4])
+        self.assertEqual([r.id for r in recommend(self.items, 0, TODAY, "KOREAN").candidates], [1, 2, 4])
+        self.assertEqual([r.id for r in recommend(self.items, 7, TODAY).candidates], [1, 3, 4])
+
+    def test_reasons(self):
+        result = recommend(self.items, 7, TODAY, "JAPANESE")
+        self.assertEqual((result.candidates, result.picked, result.reason), ([], None, "NO_CATEGORY_RESTAURANTS"))
+        recent = [restaurant(1, 0, "KOREAN"), restaurant(2, category="CHINESE")]
+        self.assertEqual(recommend(recent, 7, TODAY, "KOREAN").reason, "ALL_RECENTLY_VISITED")
+        self.assertEqual(recommend([], 7, TODAY, "KOREAN").reason, "NO_RESTAURANTS")
+
+    def test_uniform_in_category(self):
+        rng = random.Random(7)
+        counts = Counter(recommend(self.items, 7, TODAY, "KOREAN", rng).picked.id for _ in range(4000))
+        self.assertEqual(set(counts), {1, 4})
+        self.assertAlmostEqual(counts[1] / 4000, 0.5, delta=0.03)
 
 
 if __name__ == "__main__":

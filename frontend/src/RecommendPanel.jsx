@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { getRecommendation } from './api.js'
+import { CATEGORIES, categoryLabel } from './labels.js'
 import RestaurantDetails from './RestaurantDetails.jsx'
 import { useSlotSpin } from './slot.js'
 
@@ -10,16 +11,21 @@ export const EXCLUDE_OPTIONS = [
   ['14', '14일'],
 ]
 
-// 후보가 없을 때 이유(F13)
-export function reasonMessage(reason, excludeDays) {
+// 후보가 없을 때 이유(F13). category가 있으면 그 음식 종류 기준으로 알린다(F21).
+export function reasonMessage(reason, excludeDays, category = null) {
+  const target = category ? `${categoryLabel(category)} 식당` : '저장한 식당'
   if (reason === 'NO_RESTAURANTS') return '저장한 식당이 없습니다. 먼저 식당을 등록하세요.'
+  if (reason === 'NO_CATEGORY_RESTAURANTS') {
+    return `${target}이 없습니다. 먼저 등록하거나 다른 음식 종류를 고르세요.`
+  }
   if (reason === 'ALL_RECENTLY_VISITED') {
-    return `저장한 식당을 모두 최근 ${excludeDays}일 안에 방문했습니다. 제외 기간을 줄여 보세요.`
+    return `${target}을 모두 최근 ${excludeDays}일 안에 방문했습니다. 제외 기간을 줄여 보세요.`
   }
   return ''
 }
 
 export default function RecommendPanel() {
+  const [category, setCategory] = useState('')
   const [excludeDays, setExcludeDays] = useState('7')
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
@@ -35,7 +41,7 @@ export default function RecommendPanel() {
     setLoading(true)
     setError('')
     try {
-      setResult(await getRecommendation(excludeDays))
+      setResult(await getRecommendation(excludeDays, category))
     } catch (failure) {
       setResult(null)
       setError(failure.message)
@@ -49,6 +55,13 @@ export default function RecommendPanel() {
     <section aria-labelledby="recommend-title" className="recommend">
       <h2 id="recommend-title">어디서 먹을까?</h2>
       <div className="recommend-controls">
+        <div className="field">
+          <label htmlFor="recommend-category">음식 종류</label>
+          <select id="recommend-category" value={category} onChange={(event) => setCategory(event.target.value)}>
+            <option value="">전체</option>
+            {CATEGORIES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        </div>
         <div className="field">
           <label htmlFor="exclude-days">최근 방문한 곳 제외</label>
           <select id="exclude-days" value={excludeDays} onChange={(event) => setExcludeDays(event.target.value)}>
@@ -71,7 +84,7 @@ export default function RecommendPanel() {
         </div>
       )}
       <div aria-live="polite" data-testid="recommend-result">
-        {result && !result.picked && <p className="notice">{reasonMessage(result.reason, result.exclude_days)}</p>}
+        {result && !result.picked && <p className="notice">{reasonMessage(result.reason, result.exclude_days, result.category)}</p>}
         {result?.picked && phase === 'done' && (
           <div className="result-card">
             <p className="result-label">오늘은 여기!</p>

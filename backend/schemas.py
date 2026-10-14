@@ -158,7 +158,8 @@ class User(BaseModel):
 
 class Recommendation(BaseModel):
     exclude_days: int
+    category: Category | None
     today: date
     candidates: list[Restaurant]
     picked: Restaurant | None
-    reason: Literal["NO_RESTAURANTS", "ALL_RECENTLY_VISITED"] | None
+    reason: Literal["NO_RESTAURANTS", "NO_CATEGORY_RESTAURANTS", "ALL_RECENTLY_VISITED"] | None

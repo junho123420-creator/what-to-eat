@@ -76,8 +76,11 @@ export function deleteRestaurant(id) {
   return request('DELETE', `/api/restaurants/${encodeURIComponent(id)}`)
 }
 
-export function getRecommendation(excludeDays) {
-  return request('GET', `/api/recommendation?exclude_days=${encodeURIComponent(excludeDays)}`)
+// category가 빈 값이면 전체(F21)
+export function getRecommendation(excludeDays, category = '') {
+  const params = new URLSearchParams({ exclude_days: excludeDays })
+  if (category) params.set('category', category)
+  return request('GET', `/api/recommendation?${params}`)
 }
 
 export function signup(username, password) {
