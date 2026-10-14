@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # R15: Web 서버(Nginx) 설치·업데이트. React 빌드 결과를 /var/www/what-to-eat에 복사하고 8080 사이트를 켠다.
+# frontend에 커밋하지 않은 변경이 있으면 멈춘다(커밋한 화면만 배포).
 # 사용: 먼저 일반 계정으로 빌드한 뒤(cd frontend && corepack npm@10.9.4 run build) 프로젝트 루트에서
 #       sudo bash deploy/install-web.sh
 # 다른 사이트(default, flow-task)는 건드리지 않는다.
@@ -15,6 +16,15 @@ if [[ $EUID -ne 0 ]]; then
 fi
 if [[ ! -f "$REPO/frontend/dist/index.html" ]]; then
   echo "frontend/dist가 없습니다. 먼저 cd frontend && corepack npm@10.9.4 run build 를 실행하세요." >&2
+  exit 1
+fi
+
+if [[ -n "$(git -C "$REPO" -c safe.directory="$REPO" status --porcelain -- frontend)" ]]; then
+  echo "frontend에 커밋하지 않은 변경이 있습니다. 커밋한 뒤 다시 빌드하고 실행하세요." >&2
+  exit 1
+fi
+if [[ -n "$(find "$REPO/frontend/src" "$REPO/frontend/index.html" -newer "$REPO/frontend/dist/index.html" -print -quit)" ]]; then
+  echo "frontend/dist가 소스보다 오래됐습니다. 먼저 cd frontend && corepack npm@10.9.4 run build 를 실행하세요." >&2
   exit 1
 fi
 
