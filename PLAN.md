@@ -120,14 +120,27 @@ API 계약은 API-SPEC.md에 기록하고, 계약을 바꾸는 작업은 API-SPE
   기록(2026-10-14): PRD에 계정 요구사항 F16~F20 추가(제외 기능에서 로그인·회원가입 제거, 팀 공유는 계속 제외), 데이터·완료 기준 갱신.
   API-SPEC.md에 세션 쿠키(what_to_eat_session, HttpOnly·SameSite=Lax·7일 고정), 로그인 불필요 경로, User 객체, signup·login·logout·me,
   식당·추천 API의 사용자 범위, 401·409 상태 코드 추가. 결과: 대응표에 F16~F20 행 존재. 코드 변경 없음.
-- [ ] R18: users·sessions 테이블 추가, restaurants에 owner_id(NULL 허용, 외래키·인덱스) 추가. 기존 테이블은 ALTER로 열만 추가한다.
+- [x] R18: users·sessions 테이블 추가, restaurants에 owner_id(NULL 허용, 외래키·인덱스) 추가. 기존 테이블은 ALTER로 열만 추가한다.
   확인: SHOW CREATE TABLE로 새 열·외래키·인덱스·유일 제약 확인, 기존 행 수 유지, 스크립트 재실행 시 변경 없음.
-- [ ] R19: 회원가입·로그인·로그아웃·내 정보 API. 비밀번호는 hashlib.scrypt, 세션 토큰은 secrets로 발급하고 해시만 저장.
+  기록(2026-10-14): models.py에 UserRow(username UNIQUE)·SessionRow(token_hash CHAR(64) PK, user_id FK·인덱스, expires_at), RestaurantRow.owner_id(NULL, FK·인덱스).
+  init_db.py가 없는 테이블을 만들고, 기존 restaurants에는 owner_id 열·인덱스·외래키 중 없는 것만 ALTER로 추가(MariaDB DDL은 되돌릴 수 없어 단계별 확인).
+  결과(임시 DB, 실제 DB와 같은 권한·예전 구조·564건): 1회차 users·sessions 생성과 열·인덱스·외래키 추가, 2회차 변경 없음, 564건 유지.
+  외래키만 지운 상태(중간 실패 흉내)에서 외래키만 다시 추가, 빈 새 DB는 create_all로 같은 구조 생성.
+- [x] R19: 회원가입·로그인·로그아웃·내 정보 API. 비밀번호는 hashlib.scrypt, 세션 토큰은 secrets로 발급하고 해시만 저장.
   첫 가입 계정에 작성자 없는 식당을 붙인다.
   확인: 가입 201(자동 로그인 없음), 중복 409, 형식 위반 422, 틀린 비밀번호·없는 아이디 같은 401, 로그인 후 me 200,
   로그아웃 후 401, 만료 세션 401, DB에 비밀번호·토큰 원문 없음, 첫 가입자만 기존 식당을 받는다.
-- [ ] R20: 식당·추천 API에 로그인·소유자 적용. 로그인 없으면 401, 등록 시 owner_id=로그인 사용자.
+  기록(2026-10-14): backend/auth.py(scrypt n=2^14·r=8·p=1 해시 문자열, 없는 아이디도 같은 계산, secrets 토큰·SHA-256 해시 저장, 7일 고정 만료,
+  로그인 시 그 사용자의 만료 세션 정리, current_user 의존성), schemas.py Credentials·User, main.py signup·login·logout·me. 새 패키지 없음(표준 라이브러리).
+  tests/api_check.py를 사용자별 쿠키 클라이언트로 바꾸고 AuthTest 추가.
+  결과: api_check 31개 통과(가입 201·쿠키 없음, 로그인 쿠키 HttpOnly·7일, me·로그아웃, 로그아웃한 토큰 재사용 401, 중복 409, 형식 위반 9종 422,
+  틀린 비밀번호·없는 아이디·앞 공백 비밀번호 같은 401). DB: 비밀번호 원문 0건, 해시 scrypt$…, token_hash 64자, 만료시각을 과거로 바꾸면 me 401,
+  기존 564건이 첫 가입 계정(id 1)에 연결, API 로그에 비밀번호·토큰 없음.
+- [x] R20: 식당·추천 API에 로그인·소유자 적용. 로그인 없으면 401, 등록 시 owner_id=로그인 사용자.
   확인: 두 계정(A·B)으로 서로의 식당이 목록·검색·추천에 없고 수정·삭제는 404, 같은 이름도 각자 등록 가능.
+  기록(2026-10-14): store.py 모든 메서드에 owner_id 범위(다른 사용자 식당은 None → 404), main.py 식당·추천 API에 current_user 적용.
+  결과: api_check 38개(+test_recommend) 통과. 로그인 없이 식당·추천 6종 401(잘못된 본문도 401 먼저), health 200.
+  A·B 계정: B 목록 빈 배열·NO_RESTAURANTS, 같은 이름 각자 등록, 목록·검색·추천에 자기 식당만, B가 A 식당 PATCH·DELETE 404·변경 없음, 로그아웃 후 401.
 - [ ] R21: 프런트엔드 시작 화면(로그인 전), 로그인·회원가입 화면, 로그인 아이디·로그아웃 버튼, 401 응답 시 시작 화면 전환.
   확인: 브라우저에서 가입·로그인·로그아웃·새로고침 후 로그인 유지, 잘못된 로그인 문구, 아이디 글자 표시, 키보드로 조작.
 - [ ] R22: 화면 디자인 변경(다크 모드 아님). 기능·접근성(포커스 표시, Tab 순서, 움직임 줄이기)은 유지한다.

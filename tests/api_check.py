@@ -4,6 +4,7 @@
 실행: API_BASE=http://127.0.0.1:8010 python -m unittest tests.api_check -v
 """
 
+import http.cookiejar
 import json
 import os
 import time
@@ -14,20 +15,46 @@ from datetime import date, timedelta
 from urllib.parse import urlencode
 
 BASE = os.environ.get("API_BASE", "http://127.0.0.1:8010")
+PASSWORD = "test-password-1"
+
+
+class Client:
+    """쿠키(로그인 세션)를 따로 가지는 HTTP 클라이언트. 사용자마다 하나씩 만든다."""
+
+    def __init__(self):
+        self.cookies = http.cookiejar.CookieJar()
+        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cookies))
+
+    def call(self, method: str, path: str, body=None, query: dict | None = None):
+        url = BASE + path + ("?" + urlencode(query) if query else "")
+        data = None if body is None else json.dumps(body).encode()
+        request = urllib.request.Request(url, data=data, method=method, headers={"Content-Type": "application/json"})
+        try:
+            with self.opener.open(request) as response:
+                raw = response.read()
+                return response.status, json.loads(raw) if raw else None
+        except urllib.error.HTTPError as error:
+            with error:
+                raw = error.read()
+            return error.code, json.loads(raw) if raw else None
+
+    def signup_and_login(self, prefix="t"):
+        username = f"{prefix}_{time.time_ns() % 10**12}"
+        assert self.call("POST", "/api/auth/signup", {"username": username, "password": PASSWORD})[0] == 201
+        assert self.call("POST", "/api/auth/login", {"username": username, "password": PASSWORD})[0] == 200
+        return username
+
+
+# 식당·추천 테스트는 로그인한 테스트 계정 하나로 실행한다.
+default_client = Client()
+
+
+def setUpModule():
+    default_client.signup_and_login("api")
 
 
 def call(method: str, path: str, body=None, query: dict | None = None):
-    url = BASE + path + ("?" + urlencode(query) if query else "")
-    data = None if body is None else json.dumps(body).encode()
-    request = urllib.request.Request(url, data=data, method=method, headers={"Content-Type": "application/json"})
-    try:
-        with urllib.request.urlopen(request) as response:
-            raw = response.read()
-            return response.status, json.loads(raw) if raw else None
-    except urllib.error.HTTPError as error:
-        with error:
-            raw = error.read()
-        return error.code, json.loads(raw) if raw else None
+    return default_client.call(method, path, body, query)
 
 
 def create(**fields):
@@ -283,6 +310,108 @@ class RecommendationApiTest(unittest.TestCase):
         before = call("GET", "/api/restaurants")[1]
         call("GET", "/api/recommendation")
         self.assertEqual(call("GET", "/api/restaurants")[1], before)
+
+
+class AuthTest(unittest.TestCase):
+    """R19: 회원가입·로그인·로그아웃·내 정보(F16~F18)"""
+
+    def username(self):
+        return f"auth_{time.time_ns() % 10**12}"
+
+    def test_signup_login_logout(self):
+        client, name = Client(), self.username()
+        status, body = client.call("POST", "/api/auth/signup", {"username": name, "password": PASSWORD})
+        self.assertEqual(status, 201)
+        self.assertEqual(set(body), {"id", "username", "created_at"})
+        self.assertEqual(len(client.cookies), 0)  # 자동 로그인 없음
+        self.assertEqual(client.call("GET", "/api/auth/me"), (401, {"detail": "로그인이 필요합니다."}))
+        status, body = client.call("POST", "/api/auth/login", {"username": name, "password": PASSWORD})
+        self.assertEqual((status, body["username"]), (200, name))
+        cookie = next(iter(client.cookies))
+        self.assertEqual(cookie.name, "what_to_eat_session")
+        self.assertTrue(cookie.has_nonstandard_attr("HttpOnly"))
+        self.assertGreater(cookie.expires - time.time(), 7 * 86400 - 120)
+        self.assertEqual(client.call("GET", "/api/auth/me")[1]["username"], name)
+        self.assertEqual(client.call("POST", "/api/auth/logout"), (204, None))
+        self.assertEqual(client.call("GET", "/api/auth/me")[0], 401)
+        self.assertEqual(Client().call("POST", "/api/auth/logout"), (204, None))  # 로그인 안 해도 204
+
+    def test_logout_ends_old_token(self):
+        client, name = Client(), self.username()
+        client.call("POST", "/api/auth/signup", {"username": name, "password": PASSWORD})
+        client.call("POST", "/api/auth/login", {"username": name, "password": PASSWORD})
+        stolen = Client()
+        for cookie in client.cookies:
+            stolen.cookies.set_cookie(cookie)
+        self.assertEqual(stolen.call("GET", "/api/auth/me")[0], 200)
+        client.call("POST", "/api/auth/logout")
+        self.assertEqual(stolen.call("GET", "/api/auth/me")[0], 401)  # 서버에서 세션이 지워짐
+
+    def test_duplicate_and_invalid(self):
+        name = self.username()
+        self.assertEqual(Client().call("POST", "/api/auth/signup", {"username": name, "password": PASSWORD})[0], 201)
+        self.assertEqual(Client().call("POST", "/api/auth/signup", {"username": name, "password": PASSWORD}),
+                         (409, {"detail": "이미 사용 중인 아이디입니다."}))
+        cases = [{"username": "ab"}, {"username": "a" * 31}, {"username": "Abc"}, {"username": "ab c"},
+                 {"username": "가나다"}, {"password": "1234567"}, {"password": "x" * 129}, {"password": 12345678},
+                 {"extra": 1}]
+        for case in cases:
+            with self.subTest(case=case):
+                body = {"username": self.username(), "password": PASSWORD, **case}
+                self.assertEqual(Client().call("POST", "/api/auth/signup", body)[0], 422)
+        self.assertEqual(Client().call("POST", "/api/auth/signup",
+                                       {"username": "a_" + str(time.time_ns())[-28:], "password": " " * 8})[0], 201)
+
+    def test_login_failures_same_message(self):
+        name = self.username()
+        Client().call("POST", "/api/auth/signup", {"username": name, "password": PASSWORD})
+        wrong = Client().call("POST", "/api/auth/login", {"username": name, "password": PASSWORD + "x"})
+        missing = Client().call("POST", "/api/auth/login", {"username": name + "_none", "password": PASSWORD})
+        spaced = Client().call("POST", "/api/auth/login", {"username": name, "password": " " + PASSWORD})
+        expected = (401, {"detail": "아이디 또는 비밀번호가 올바르지 않습니다."})
+        self.assertEqual((wrong, missing, spaced), (expected, expected, expected))
+
+
+class OwnerTest(unittest.TestCase):
+    """R20: 로그인 필요, 사용자별 식당(F18, F19)"""
+
+    def test_login_required(self):
+        anonymous = Client()
+        cases = [("GET", "/api/restaurants", None), ("POST", "/api/restaurants", {"name": "x"}),
+                 ("POST", "/api/restaurants", {"bad": 1}), ("PATCH", "/api/restaurants/1", {"name": "x"}),
+                 ("DELETE", "/api/restaurants/1", None), ("GET", "/api/recommendation", None)]
+        for method, path, body in cases:
+            with self.subTest(method=method, path=path):
+                self.assertEqual(anonymous.call(method, path, body), (401, {"detail": "로그인이 필요합니다."}))
+        self.assertEqual(anonymous.call("GET", "/api/health")[0], 200)
+
+    def test_users_are_isolated(self):
+        a, b = Client(), Client()
+        a.signup_and_login("a")
+        b.signup_and_login("b")
+        self.assertEqual(b.call("GET", "/api/restaurants"), (200, []))
+        self.assertEqual(b.call("GET", "/api/recommendation")[1]["reason"], "NO_RESTAURANTS")
+        mine = a.call("POST", "/api/restaurants", {"name": "같은이름", "memo": "A의 메모"})[1]
+        theirs = b.call("POST", "/api/restaurants", {"name": "같은이름", "memo": "B의 메모"})[1]
+        self.assertEqual([r["id"] for r in a.call("GET", "/api/restaurants")[1]], [mine["id"]])
+        self.assertEqual([r["id"] for r in b.call("GET", "/api/restaurants", query={"q": "같은"})[1]], [theirs["id"]])
+        rec = b.call("GET", "/api/recommendation", query={"exclude_days": 0})[1]
+        self.assertEqual([r["id"] for r in rec["candidates"]], [theirs["id"]])
+        self.assertNotIn("owner_id", theirs)
+        # 다른 사용자의 식당은 없는 식당과 같은 404이고 바뀌지 않는다.
+        not_found = (404, {"detail": "식당을 찾을 수 없습니다."})
+        self.assertEqual(b.call("PATCH", f"/api/restaurants/{mine['id']}", {"memo": "B가 바꿈"}), not_found)
+        self.assertEqual(b.call("DELETE", f"/api/restaurants/{mine['id']}"), not_found)
+        self.assertEqual(a.call("GET", "/api/restaurants")[1], [mine])
+        self.assertEqual(a.call("DELETE", f"/api/restaurants/{mine['id']}")[0], 204)
+        self.assertEqual(b.call("GET", "/api/restaurants")[1], [theirs])
+
+    def test_logout_blocks_restaurants(self):
+        client = Client()
+        client.signup_and_login("lo")
+        self.assertEqual(client.call("GET", "/api/restaurants")[0], 200)
+        client.call("POST", "/api/auth/logout")
+        self.assertEqual(client.call("GET", "/api/restaurants")[0], 401)
 
 
 if __name__ == "__main__":

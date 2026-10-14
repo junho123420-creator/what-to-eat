@@ -135,6 +135,27 @@ class Restaurant(BaseModel):
         return value.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+class Credentials(BaseModel):
+    """회원가입·로그인 요청(F16, F17). 아이디는 자동 변환하지 않고, 비밀번호 앞뒤 공백도 그대로 쓴다."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    username: Annotated[str, StringConstraints(pattern=r"^[a-z0-9_]{3,30}$")]
+    password: Annotated[str, StringConstraints(min_length=8, max_length=128)]
+
+
+class User(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    username: str
+    created_at: datetime
+
+    @field_serializer("created_at")
+    def serialize_utc(self, value: datetime) -> str:
+        return value.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 class Recommendation(BaseModel):
     exclude_days: int
     today: date
