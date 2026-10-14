@@ -162,8 +162,10 @@ API 계약은 API-SPEC.md에 기록하고, 계약을 바꾸는 작업은 API-SPE
   확인: 기존 20곳이 첫 가입 계정에 붙음, 8080에서 가입·로그인·추천, API 재시작 후 로그인·데이터 유지.
   기록(2026-10-14, 진행 중): install-api.sh를 git archive(HEAD의 backend·requirements.txt)로 설치하도록 변경, install-web.sh는 frontend 미커밋 변경·오래된 빌드면 멈춤.
   사전 확인: 빌드 결과를 임시 Nginx(18080)+임시 API(8011)로 R21·R13·R06 19개 통과.
-  남은 일: 사용자가 sudo로 install-api.sh(실제 DB에 users·sessions 생성, restaurants.owner_id 추가)·install-web.sh 실행 →
-  사용자 본인 계정을 먼저 가입(기존 20곳 연결) → 실제 8080에서 확인.
+  배포(사용자 실행, 16:20): install-api.sh·install-web.sh. 결과: /opt/what-to-eat·/var/www/what-to-eat가 커밋 b954787(R24 포함)과 같음,
+  8080에서 로그인 없이 /api/auth/me·/api/restaurants 401. 사용자가 먼저 가입한 wnsgh2929(id 1)에 기존 20곳이 모두 연결, 다른 계정 없음.
+  남은 확인: 실제 DB에는 테스트 계정을 만들지 않기로 해, 실제 환경에서 API 재시작 후 로그인 유지는 사용자 확인 대기
+  (임시 DB에서는 R21 테스트로 확인). flow-task(80) 정상.
 ## 7장: 추천 조건 (PRD F21)
 결정(2026-10-14, 사용자 요청): 추천에 음식 종류 선택을 추가한다. 기본값 전체, 최근 방문 제외와 AND. 가격대·방문 상태 조건은 계속 제외.
 - [x] R24: GET /api/recommendation에 category 조건과 이유 NO_CATEGORY_RESTAURANTS 추가, 추천 화면에 음식 종류 선택 칸 추가.
