@@ -195,3 +195,7 @@ API 계약은 API-SPEC.md에 기록하고, 계약을 바꾸는 작업은 API-SPE
   가격대는 근거 있는 곳만(엉터리생고기 LOW), 지도 링크는 네이버 지도 검색 주소, 메모에 "방문 전 영업 여부 확인 필요". 이도곰탕 주소(논현로94길 29-5)를 기본 목록에만 반영.
   결과: defaults.py 검증 40곳 통과, DefaultRestaurantsTest·OwnerTest 통과. 실제 DB: python -m backend.add_defaults wnsgh2929 → 20곳 추가(20→40), 계정별 이름 중복 0.
   배포(사용자 실행, 16:41): install-api.sh. 결과: /opt/what-to-eat 기본 목록 40곳·auth.py가 저장소와 같음, 서비스 active, 8080 health 200.
+## 운영 메모
+- 2026-10-14(사용자 요청): 포트 없이 접속하도록 Nginx 사이트에 80번 + server_name eat.localhost 추가(80번 기본 사이트는 flow-task 그대로).
+  확인(임시 Nginx에 flow-task 설정과 함께 올림): nginx -t 성공, 80번 Host localhost·IP → Task Flow, eat.localhost → 오늘 뭐 먹지 화면·/api/health 200, 8080 그대로.
+  반영: sudo bash deploy/install-web.sh 필요.

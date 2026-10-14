@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# R15: Web 서버(Nginx) 설치·업데이트. React 빌드 결과를 /var/www/what-to-eat에 복사하고 8080 사이트를 켠다.
+# R15: Web 서버(Nginx) 설치·업데이트. React 빌드 결과를 /var/www/what-to-eat에 복사하고 사이트를 켠다(8080, 80번의 eat.localhost).
 # frontend에 커밋하지 않은 변경이 있으면 멈춘다(커밋한 화면만 배포).
 # 사용: 먼저 일반 계정으로 빌드한 뒤(cd frontend && corepack npm@10.9.4 run build) 프로젝트 루트에서
 #       sudo bash deploy/install-web.sh
@@ -46,3 +46,5 @@ systemctl reload nginx
 echo "[4] 확인"
 curl -s -o /dev/null -w "/ %{http_code}\n" http://127.0.0.1:8080/
 curl -s -w " %{http_code}\n" http://127.0.0.1:8080/api/health
+curl -s -o /dev/null -H "Host: eat.localhost" -w "eat.localhost(80) / %{http_code}\n" http://127.0.0.1/
+curl -s -o /dev/null -w "localhost(80, flow-task) / %{http_code}\n" http://127.0.0.1/
