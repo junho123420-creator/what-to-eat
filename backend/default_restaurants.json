@@ -11,7 +11,7 @@
     "name": "이도곰탕",
     "category": "KOREAN",
     "price_range": null,
-    "location_note": "역삼역 인근",
+    "location_note": "강남구 논현로94길 29-5 (역삼역 인근)",
     "map_url": "https://map.naver.com/p/search/%EC%9D%B4%EB%8F%84%EA%B3%B0%ED%83%95%20%EA%B0%95%EB%82%A8",
     "memo": "한우곰탕 전문점.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
   },
@@ -158,5 +158,165 @@
     "location_note": "강남구 강남대로102길 11",
     "map_url": "https://map.naver.com/p/search/%EA%BE%B8%EC%95%84%20%EA%B0%95%EB%82%A8",
     "memo": "베트남 음식. 분짜, 직화 쌀국수.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "선덕칼국수",
+    "category": "KOREAN",
+    "price_range": null,
+    "location_note": "강남구 테헤란로27길 29 지하 1층 (역삼역 7번 출구)",
+    "map_url": "https://map.naver.com/p/search/%EC%84%A0%EB%8D%95%EC%B9%BC%EA%B5%AD%EC%88%98%20%EA%B0%95%EB%82%A8",
+    "memo": "닭칼국수·감자전. 웨이팅 있음, 평일 15~17시 브레이크타임, 토요일 휴무.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "전봇대",
+    "category": "KOREAN",
+    "price_range": null,
+    "location_note": "역삼역 7번 출구, 충현교회 건너편",
+    "map_url": "https://map.naver.com/p/search/%EC%A0%84%EB%B4%87%EB%8C%80%20%EA%B0%95%EB%82%A8",
+    "memo": "보쌈·국수. 집밥처럼 깔끔하다는 평.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "담원순대 강남직영점",
+    "category": "KOREAN",
+    "price_range": null,
+    "location_note": "강남구 테헤란로4길 34",
+    "map_url": "https://map.naver.com/p/search/%EB%8B%B4%EC%9B%90%EC%88%9C%EB%8C%80%20%EA%B0%95%EB%82%A8%EC%A7%81%EC%98%81%EC%A0%90%20%EA%B0%95%EB%82%A8",
+    "memo": "순대국·뼈해장국. 점심 웨이팅 많음.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "현대순대국",
+    "category": "KOREAN",
+    "price_range": null,
+    "location_note": "강남구 강남대로124길 20",
+    "map_url": "https://map.naver.com/p/search/%ED%98%84%EB%8C%80%EC%88%9C%EB%8C%80%EA%B5%AD%20%EA%B0%95%EB%82%A8",
+    "memo": "순대국. 반찬과 국밥 모두 좋다는 후기.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "엉터리생고기 강남점",
+    "category": "KOREAN",
+    "price_range": "LOW",
+    "location_note": "강남역 근처 지하",
+    "map_url": "https://map.naver.com/p/search/%EC%97%89%ED%84%B0%EB%A6%AC%EC%83%9D%EA%B3%A0%EA%B8%B0%20%EA%B0%95%EB%82%A8%EC%A0%90%20%EA%B0%95%EB%82%A8",
+    "memo": "삼겹살 무한리필(1인 약 1만원, 목살·우삼겹 포함 시 추가).\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "국제수입식당 역삼",
+    "category": "KOREAN",
+    "price_range": null,
+    "location_note": "강남역~역삼 인근",
+    "map_url": "https://map.naver.com/p/search/%EA%B5%AD%EC%A0%9C%EC%88%98%EC%9E%85%EC%8B%9D%EB%8B%B9%20%EC%97%AD%EC%82%BC%20%EA%B0%95%EB%82%A8",
+    "memo": "냉동삼겹살이 저렴한 고깃집. 볶음밥 별미.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "쑤항계절",
+    "category": "CHINESE",
+    "price_range": null,
+    "location_note": "강남구 강남대로94길 20, 1층 (강남역 11번 출구)",
+    "map_url": "https://map.naver.com/p/search/%EC%91%A4%ED%95%AD%EA%B3%84%EC%A0%88%20%EA%B0%95%EB%82%A8",
+    "memo": "항저우 수제 딤섬·중국요리. 일요일 휴무.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "남소관 우육도삭면",
+    "category": "CHINESE",
+    "price_range": null,
+    "location_note": "강남구 테헤란로1길 19",
+    "map_url": "https://map.naver.com/p/search/%EB%82%A8%EC%86%8C%EA%B4%80%20%EC%9A%B0%EC%9C%A1%EB%8F%84%EC%82%AD%EB%A9%B4%20%EA%B0%95%EB%82%A8",
+    "memo": "우육면·도삭면.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "천진영감",
+    "category": "CHINESE",
+    "price_range": null,
+    "location_note": "강남역 먹자골목",
+    "map_url": "https://map.naver.com/p/search/%EC%B2%9C%EC%A7%84%EC%98%81%EA%B0%90%20%EA%B0%95%EB%82%A8",
+    "memo": "마라탕 전문점.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "수미 초밥",
+    "category": "JAPANESE",
+    "price_range": null,
+    "location_note": "강남구 논현로71길 37",
+    "map_url": "https://map.naver.com/p/search/%EC%88%98%EB%AF%B8%20%EC%B4%88%EB%B0%A5%20%EA%B0%95%EB%82%A8",
+    "memo": "초밥 세트에 우동·튀김이 함께 나온다는 후기.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "스시마이우",
+    "category": "JAPANESE",
+    "price_range": null,
+    "location_note": "강남역 인근",
+    "map_url": "https://map.naver.com/p/search/%EC%8A%A4%EC%8B%9C%EB%A7%88%EC%9D%B4%EC%9A%B0%20%EA%B0%95%EB%82%A8",
+    "memo": "회전초밥.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "브릭오븐",
+    "category": "WESTERN",
+    "price_range": null,
+    "location_note": "강남구 강남대로102길 31",
+    "map_url": "https://map.naver.com/p/search/%EB%B8%8C%EB%A6%AD%EC%98%A4%EB%B8%90%20%EA%B0%95%EB%82%A8",
+    "memo": "얇은 도우 화덕피자. 주문 응대가 느렸다는 후기도 있음.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "나폴리회관",
+    "category": "WESTERN",
+    "price_range": null,
+    "location_note": "강남구 테헤란로5길 24",
+    "map_url": "https://map.naver.com/p/search/%EB%82%98%ED%8F%B4%EB%A6%AC%ED%9A%8C%EA%B4%80%20%EA%B0%95%EB%82%A8",
+    "memo": "화덕피자. 넓은 매장.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "도치피자",
+    "category": "WESTERN",
+    "price_range": null,
+    "location_note": "강남역 11번 출구 근처",
+    "map_url": "https://map.naver.com/p/search/%EB%8F%84%EC%B9%98%ED%94%BC%EC%9E%90%20%EA%B0%95%EB%82%A8",
+    "memo": "나폴리 화덕피자·파스타, 빈티지 분위기.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "바바인디아 강남역점",
+    "category": "ETC",
+    "price_range": null,
+    "location_note": "서초구 강남대로 359, 2층 (신분당선 출구 근처)",
+    "map_url": "https://map.naver.com/p/search/%EB%B0%94%EB%B0%94%EC%9D%B8%EB%94%94%EC%95%84%20%EA%B0%95%EB%82%A8%EC%97%AD%EC%A0%90%20%EA%B0%95%EB%82%A8",
+    "memo": "인도 커리. 점심 전화 예약 가능하다는 후기.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "커리하우스 빈103",
+    "category": "ETC",
+    "price_range": null,
+    "location_note": "강남구 강남대로102길 16",
+    "map_url": "https://map.naver.com/p/search/%EC%BB%A4%EB%A6%AC%ED%95%98%EC%9A%B0%EC%8A%A4%20%EB%B9%88103%20%EA%B0%95%EB%82%A8",
+    "memo": "한국인 입맛에 맞춘 인도 커리. 매장이 작음.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "까올리포차나",
+    "category": "ETC",
+    "price_range": null,
+    "location_note": "강남구 강남대로114길 10",
+    "map_url": "https://map.naver.com/p/search/%EA%B9%8C%EC%98%AC%EB%A6%AC%ED%8F%AC%EC%B0%A8%EB%82%98%20%EA%B0%95%EB%82%A8",
+    "memo": "포장마차 분위기의 태국 음식.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "갓잇 강남점",
+    "category": "ETC",
+    "price_range": null,
+    "location_note": "강남구 봉은사로4길 10",
+    "map_url": "https://map.naver.com/p/search/%EA%B0%93%EC%9E%87%20%EA%B0%95%EB%82%A8%EC%A0%90%20%EA%B0%95%EB%82%A8",
+    "memo": "멕시칸(타코·엔칠라다). 여럿이 나눠 먹는 세트.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "낙원타코 강남역점",
+    "category": "ETC",
+    "price_range": null,
+    "location_note": "서초구 서초대로73길 7",
+    "map_url": "https://map.naver.com/p/search/%EB%82%99%EC%9B%90%ED%83%80%EC%BD%94%20%EA%B0%95%EB%82%A8%EC%97%AD%EC%A0%90%20%EA%B0%95%EB%82%A8",
+    "memo": "멕시칸 타코. 또띠아 리필.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
+  },
+  {
+    "name": "쿠차라",
+    "category": "ETC",
+    "price_range": null,
+    "location_note": "서초구 서초대로74길 11",
+    "map_url": "https://map.naver.com/p/search/%EC%BF%A0%EC%B0%A8%EB%9D%BC%20%EA%B0%95%EB%82%A8",
+    "memo": "부리또볼.\n웹 검색(2026-10-14) 후기 기준. 방문 전 영업 여부 확인 필요."
   }
 ]
