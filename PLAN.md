@@ -194,4 +194,4 @@ API 계약은 API-SPEC.md에 기록하고, 계약을 바꾸는 작업은 API-SPE
   다른 동네(압구정 루비떡볶이, 논현역 도셰프 등)·폐점 표시(감성타코, 봄베이 브로이, 수엠부 등)는 제외. 멕시칸·인도·태국은 기타(ETC)로 분류.
   가격대는 근거 있는 곳만(엉터리생고기 LOW), 지도 링크는 네이버 지도 검색 주소, 메모에 "방문 전 영업 여부 확인 필요". 이도곰탕 주소(논현로94길 29-5)를 기본 목록에만 반영.
   결과: defaults.py 검증 40곳 통과, DefaultRestaurantsTest·OwnerTest 통과. 실제 DB: python -m backend.add_defaults wnsgh2929 → 20곳 추가(20→40), 계정별 이름 중복 0.
-  남은 일: 새 가입자가 40곳을 받으려면 sudo bash deploy/install-api.sh로 서버 반영(화면 변경 없음).
+  배포(사용자 실행, 16:41): install-api.sh. 결과: /opt/what-to-eat 기본 목록 40곳·auth.py가 저장소와 같음, 서비스 active, 8080 health 200.
