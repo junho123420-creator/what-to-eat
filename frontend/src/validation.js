@@ -10,6 +10,31 @@ export function charLength(value) {
   return [...value].length
 }
 
+// 계정 규칙(F16). 서버와 같다.
+export const USERNAME_PATTERN = /^[a-z0-9_]{3,30}$/
+export const PASSWORD_MIN = 8
+export const PASSWORD_MAX = 128
+
+// 회원가입 입력 검증(F16)
+export function validateSignup({ username, password, passwordConfirm }) {
+  const errors = {}
+  if (!USERNAME_PATTERN.test(username)) errors.username = '아이디는 영문 소문자·숫자·밑줄(_) 3~30자로 입력하세요.'
+  const length = charLength(password)
+  if (length < PASSWORD_MIN || length > PASSWORD_MAX) {
+    errors.password = `비밀번호는 ${PASSWORD_MIN}~${PASSWORD_MAX}자로 입력하세요.`
+  }
+  if (password !== passwordConfirm) errors.passwordConfirm = '비밀번호가 서로 다릅니다.'
+  return errors
+}
+
+// 로그인은 빈 칸만 확인한다. 형식이 틀린 경우도 서버의 같은 실패 문구로 알린다(F17).
+export function validateLogin({ username, password }) {
+  const errors = {}
+  if (username === '') errors.username = '아이디를 입력하세요.'
+  if (password === '') errors.password = '비밀번호를 입력하세요.'
+  return errors
+}
+
 // 브라우저 로컬 날짜(YYYY-MM-DD)
 export function localToday(now = new Date()) {
   const pad = (n) => String(n).padStart(2, '0')
