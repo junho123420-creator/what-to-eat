@@ -64,8 +64,10 @@ export default function RecommendPanel() {
       {error && <p className="error" role="alert">{error}</p>}
       {result?.picked && (
         // 도는 동안의 이름은 화면 읽기 프로그램에 읽히지 않게 하고, 멈춘 뒤 결과만 알린다.
-        <div className={`slot ${spinning ? 'spinning' : 'stopped'}`} aria-hidden="true" data-testid="slot-reel">
-          <span key={reelName} className="slot-name">{reelName}</span>
+        <div className="slot-frame" aria-hidden="true">
+          <div className={`slot ${spinning ? 'spinning' : 'stopped'}`} data-testid="slot-reel">
+            <span key={reelName} className="slot-name">{reelName}</span>
+          </div>
         </div>
       )}
       <div aria-live="polite" data-testid="recommend-result">

@@ -20,6 +20,16 @@ export const VISIT_STATUSES = [
   ['VISITED', '가봄'],
 ]
 
+// 목록에서 음식 종류를 한눈에 알아보도록 붙이는 그림 문자(장식용, 화면 읽기 프로그램에서는 숨김)
+export const CATEGORY_ICONS = {
+  KOREAN: '🍚',
+  CHINESE: '🥟',
+  JAPANESE: '🍣',
+  WESTERN: '🍝',
+  SNACK: '🍢',
+  ETC: '🍽️',
+}
+
 function labelOf(pairs, value) {
   return pairs.find(([key]) => key === value)?.[1] ?? ''
 }

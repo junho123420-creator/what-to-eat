@@ -1,4 +1,4 @@
-import { categoryLabel, priceLabel, stars, visitLabel } from './labels.js'
+import { CATEGORY_ICONS, categoryLabel, priceLabel, stars, visitLabel } from './labels.js'
 import { safeMapUrl } from './validation.js'
 
 // 식당 정보 표시(목록·추천 결과 공용). 사용자 입력은 모두 React 텍스트로 넣어 HTML로 해석되지 않는다.
@@ -12,8 +12,11 @@ export default function RestaurantDetails({ restaurant, showMemo = true, nameAs:
         <span className={`badge status-${restaurant.visit_status.toLowerCase()}`}>{visitLabel(restaurant.visit_status)}</span>
       </div>
       <div className="meta">
-        <span>{categoryLabel(restaurant.category)}</span>
-        {restaurant.price_range && <span>{priceLabel(restaurant.price_range)}</span>}
+        <span className="chip">
+          <span aria-hidden="true">{CATEGORY_ICONS[restaurant.category]} </span>
+          {categoryLabel(restaurant.category)}
+        </span>
+        {restaurant.price_range && <span className="chip">{priceLabel(restaurant.price_range)}</span>}
         {visited && restaurant.rating && (
           <span className="stars" aria-label={`별점 ${restaurant.rating}점`}>{stars(restaurant.rating)}</span>
         )}

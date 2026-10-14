@@ -82,60 +82,66 @@ export default function Home({ user, onLogout }) {
   return (
     <main className="app">
       <header className="app-header">
-        <h1>오늘 뭐 먹지?</h1>
+        <h1><span className="logo" aria-hidden="true">🍱</span>오늘 뭐 먹지?</h1>
         <div className="account">
-          <span className="account-name" data-testid="current-user">{user.username}</span>
+          <span className="account-name"><span className="visually-hidden">로그인한 아이디 </span><span data-testid="current-user">{user.username}</span></span>
           <button type="button" onClick={onLogout}>로그아웃</button>
         </div>
       </header>
 
-      <RecommendPanel />
+      <div className="layout">
+        <div className="col-side">
+          <RecommendPanel />
 
-      <section aria-labelledby="add-title">
-        <h2 id="add-title">식당 등록</h2>
-        <RestaurantForm idPrefix="new" submitLabel="등록" onSubmit={handleCreate} />
-      </section>
+          <section aria-labelledby="add-title">
+            <h2 id="add-title">식당 등록</h2>
+            <RestaurantForm idPrefix="new" submitLabel="등록" onSubmit={handleCreate} />
+          </section>
+        </div>
 
-      <section aria-labelledby="list-title">
-        <h2 id="list-title">저장한 식당</h2>
-        <FilterBar filters={filters} onChange={setFilters} />
-        {apiError && <p className="error" role="alert" data-testid="api-error">{apiError}</p>}
-        {loading ? (
-          <p>불러오는 중...</p>
-        ) : restaurants.length === 0 ? (
-          <p className="empty">{filtering ? '조건에 맞는 식당이 없습니다.' : '저장한 식당이 없습니다.'}</p>
-        ) : (
-          <>
-            <p className="result-count" aria-live="polite">{restaurants.length}곳</p>
-            <ul className="restaurant-list">
-              {restaurants.map((restaurant) => (
-                <li key={restaurant.id} data-id={restaurant.id} className={editingId === restaurant.id ? 'editing' : undefined}>
-                  {editingId === restaurant.id ? (
-                    <RestaurantForm
-                      idPrefix={`edit-${restaurant.id}`}
-                      initialValues={toFormValues(restaurant)}
-                      submitLabel="저장"
-                      autoFocus
-                      onSubmit={(payload) => handleUpdate(restaurant.id, payload)}
-                      onCancel={() => finishEdit(restaurant.id)}
-                    />
-                  ) : (
-                    <RestaurantItem
-                      restaurant={restaurant}
-                      onEdit={() => setEditingId(restaurant.id)}
-                      onDelete={() => handleDelete(restaurant)}
-                      editButtonRef={(element) => {
-                        if (element) editButtons.current.set(restaurant.id, element)
-                        else editButtons.current.delete(restaurant.id)
-                      }}
-                    />
-                  )}
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </section>
+        <div className="col-main">
+          <section aria-labelledby="list-title">
+            <h2 id="list-title">저장한 식당</h2>
+            <FilterBar filters={filters} onChange={setFilters} />
+            {apiError && <p className="error" role="alert" data-testid="api-error">{apiError}</p>}
+            {loading ? (
+              <p>불러오는 중...</p>
+            ) : restaurants.length === 0 ? (
+              <p className="empty">{filtering ? '조건에 맞는 식당이 없습니다.' : '저장한 식당이 없습니다.'}</p>
+            ) : (
+              <>
+                <p className="result-count" aria-live="polite">{restaurants.length}곳</p>
+                <ul className="restaurant-list">
+                  {restaurants.map((restaurant) => (
+                    <li key={restaurant.id} data-id={restaurant.id} className={editingId === restaurant.id ? 'editing' : undefined}>
+                      {editingId === restaurant.id ? (
+                        <RestaurantForm
+                          idPrefix={`edit-${restaurant.id}`}
+                          initialValues={toFormValues(restaurant)}
+                          submitLabel="저장"
+                          autoFocus
+                          onSubmit={(payload) => handleUpdate(restaurant.id, payload)}
+                          onCancel={() => finishEdit(restaurant.id)}
+                        />
+                      ) : (
+                        <RestaurantItem
+                          restaurant={restaurant}
+                          onEdit={() => setEditingId(restaurant.id)}
+                          onDelete={() => handleDelete(restaurant)}
+                          editButtonRef={(element) => {
+                            if (element) editButtons.current.set(restaurant.id, element)
+                            else editButtons.current.delete(restaurant.id)
+                          }}
+                        />
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </section>
+        </div>
+      </div>
     </main>
   )
 }
