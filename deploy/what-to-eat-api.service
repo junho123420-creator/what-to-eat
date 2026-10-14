@@ -1,0 +1,18 @@
+# 오늘 뭐 먹지? API를 systemd 서비스로 실행한다. 설치: sudo bash deploy/install-api.sh
+# 코드는 /opt/what-to-eat, 실행 계정은 what-to-eat. DB 접속 정보는 /opt/what-to-eat/.env(권한 600)에서 읽는다.
+# 지금은 Nginx와 같은 서버라 127.0.0.1에서만 받는다. App 서버를 분리하면 --host를 서버 주소로 바꾼다.
+[Unit]
+Description=What To Eat API (FastAPI + uvicorn)
+After=network-online.target mariadb.service
+Wants=network-online.target
+
+[Service]
+User=what-to-eat
+Group=what-to-eat
+WorkingDirectory=/opt/what-to-eat
+ExecStart=/opt/what-to-eat/.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8010
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
