@@ -39,7 +39,7 @@ fi
 
 echo "[1] Nginx 확인"
 if ! command -v nginx >/dev/null; then
-  if command -v dnf >/dev/null; then dnf install -y nginx; else apt-get install -y nginx; fi
+  if command -v dnf >/dev/null; then dnf install -y nginx; else apt-get update -q && apt-get install -y nginx; fi
 fi
 
 echo "[2] 정적 파일 → $WEB_DIR"
