@@ -64,11 +64,12 @@ fi
 nginx -t
 systemctl enable --now nginx
 systemctl reload nginx
+sleep 2   # reload 직후에는 예전 설정의 worker가 응답할 수 있다
 
 echo "[4] 확인"
 if [[ "$WEB_MODE" == split ]]; then
   curl -s -o /dev/null -w "/ %{http_code}\n" http://127.0.0.1/
-  curl -s -w " %{http_code}\n" http://127.0.0.1/api/health
+  curl -s -m 10 -w " %{http_code}\n" http://127.0.0.1/api/health
   exit 0
 fi
 curl -s -o /dev/null -w "/ %{http_code}\n" http://127.0.0.1:8080/
