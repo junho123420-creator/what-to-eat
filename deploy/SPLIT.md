@@ -3,7 +3,7 @@
 | 계층 | 서버 | 주소 | 받는 포트 |
 |---|---|---|---|
 | Web (Nginx + React 빌드) | EC2 1 | 10.10.10.10, 공개 52.79.221.146 | 80 (모든 곳), 22 (내 IP) |
-| App (FastAPI) | EC2 2 | 10.10.20.20 | 8010 (Web만), 22 (Web만) |
+| App (FastAPI) | EC2 2 | 10.10.20.20 | 8000 (Web만), 22 (Web만) |
 | DB (MariaDB) | EC2 3 | 10.10.30.30 | 3306 (App만), 22 (Web만) |
 
 사용자는 `http://52.79.221.146`으로 접속한다. App·DB는 공개 주소 없이 프라이빗 주소로만 연결한다.
@@ -12,7 +12,7 @@
 
 ## 1. 보안 그룹
 - Web: 인바운드 TCP 80 `0.0.0.0/0`, TCP 22 내 IP.
-- App: 인바운드 TCP 8010 소스 `10.10.10.10/32`, TCP 22 소스 `10.10.10.10/32`.
+- App: 인바운드 TCP 8000 소스 `10.10.10.10/32`, TCP 22 소스 `10.10.10.10/32`.
 - DB: 인바운드 TCP 3306 소스 `10.10.20.20/32`, TCP 22 소스 `10.10.10.10/32`.
 - App·DB는 dnf·pip 설치에 인터넷 아웃바운드가 필요하다(프라이빗 서브넷이면 NAT 게이트웨이).
 
@@ -50,9 +50,9 @@ App 서버에서:
 chmod 600 .env
 sed -i 's/^DB_HOST=.*/DB_HOST=10.10.30.30/' .env
 sudo dnf install -y python3.12   # 기본 python3(3.9)는 백엔드에 너무 낮다(3.10 이상 필요). 없으면 python3.11
-sudo API_HOST=10.10.20.20 bash deploy/install-api.sh
+sudo API_HOST=10.10.20.20 API_PORT=8000 bash deploy/install-api.sh
 ```
-확인: 서비스 active, `http://10.10.20.20:8010/api/health` 200, `/api/restaurants` 401(로그인 전).
+확인: 서비스 active, `http://10.10.20.20:8000/api/health` 200, `/api/restaurants` 401(로그인 전).
 
 ## 5. Web 서버 (10.10.10.10)
 React 빌드는 Node가 있는 WSL에서 하고 결과만 복사한다. WSL에서:
@@ -67,7 +67,7 @@ sudo WEB_MODE=split bash deploy/install-web.sh
 확인: `/` 200, `/api/health` 200. 브라우저에서 `http://52.79.221.146` 접속 → 회원가입·로그인·식당 등록.
 
 ## 업데이트
-- 백엔드: App 서버에서 `git pull` 후 `sudo API_HOST=10.10.20.20 bash deploy/install-api.sh`.
+- 백엔드: App 서버에서 `git pull` 후 `sudo API_HOST=10.10.20.20 API_PORT=8000 bash deploy/install-api.sh`.
 - 화면: WSL에서 다시 빌드·복사, Web 서버에서 `git pull` 후 `sudo WEB_MODE=split bash deploy/install-web.sh`.
 
 ## 참고

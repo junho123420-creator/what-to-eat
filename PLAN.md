@@ -210,9 +210,15 @@ API 계약은 API-SPEC.md에 기록하고, 계약을 바꾸는 작업은 API-SPE
   setup-db-server.sh는 mariadb105-server·/etc/my.cnf.d/zz-what-to-eat.cnf, install-web.sh는 sites-available이 없으면 conf.d에 설치하고 nginx를 켠다.
   확인: bash -n 통과, AL형 nginx.conf(conf.d 포함 + server_name _ 기본 server)와 함께 nginx -t 성공·IP/공개 주소 Host로 / 200·/api/health 200.
 - [ ] R28: 실제 EC2 3대 설치와 운영 주소 통합 확인(사용자 실행, 순서는 deploy/SPLIT.md: DB → App → Web).
-  확인: DB 3306이 10.10.30.30에서만 대기, 사용자 what_to_eat_app@10.10.20.20만 있음. App 서비스 active, 10.10.20.20:8010 health 200·restaurants 401.
+  확인: DB 3306이 10.10.30.30에서만 대기, App 서버에서만 DB 접속. App 서비스 active, 10.10.20.20:8000 health 200·restaurants 401.
   Web에서 http://52.79.221.146 / 200, /api/health 200, 가입 시 기본 맛집 40곳, 로그인·등록·추천, App 재시작 후 로그인·데이터 유지.
   App·DB 공개 접근 불가, Web 서버에 .env 없음, Web·App 로그에 DB 비밀번호 없음.
+  기록(2026-10-15, 진행 중): App·DB는 Amazon Linux 2023(ec2-user), Web은 Ubuntu 24.04(ubuntu).
+  DB: MariaDB와 사용자 what_to_eat_app@%(food_db 전체 권한, 비밀번호는 .env와 같음)가 이미 있어 스크립트는 만들지 않음. 빈 food_db를 그대로 쓰기로 함(App .env DB_NAME=food_db).
+  10.10.30.30:3306 대기 확인. 권한이 PRD(App 주소만, DROP 없음)보다 넓음 — 사용자 결정 전까지 유지.
+  App: python3.12, install-api.sh로 food_db에 users·restaurants·sessions 생성, 서비스 active, 10.10.20.20:8010 health 200·restaurants 401.
+  Web: nginx 설치 시 apt-get update 누락으로 404 → 스크립트 수정. reload 직후 확인이 예전 기본 사이트에 응답 → 2초 대기 추가. 이후 / 가 앱 index.html.
+  Web → App 8010 연결 시간 초과(보안 그룹). 사용자 요청으로 분리 배포 App 포트를 8000으로 변경(install-api.sh API_PORT, 기본 8010 유지).
 ## 운영 메모
 - 2026-10-14(사용자 요청): 포트 없이 접속하도록 Nginx 사이트에 80번 + server_name eat.localhost 추가(80번 기본 사이트는 flow-task 그대로).
   확인(임시 Nginx에 flow-task 설정과 함께 올림): nginx -t 성공, 80번 Host localhost·IP → Task Flow, eat.localhost → 오늘 뭐 먹지 화면·/api/health 200, 8080 그대로.

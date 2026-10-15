@@ -62,9 +62,9 @@
 Docker, Kubernetes는 추가하지 않는다.
 ### 운영 배포: AWS EC2 3대(Amazon Linux 2023)
 - Web 계층(Nginx + React 빌드 결과): 프라이빗 10.10.10.10, 공개 52.79.221.146. 사용자는 http://52.79.221.146 으로만 접속한다.
-- App 계층(FastAPI, 8010): 프라이빗 10.10.20.20. 공개 주소 없이 Web 서버에서 오는 /api/ 요청만 받는다.
+- App 계층(FastAPI, 8000): 프라이빗 10.10.20.20. 공개 주소 없이 Web 서버에서 오는 /api/ 요청만 받는다.
 - DB 계층(MariaDB, 3306): 프라이빗 10.10.30.30. 공개 주소 없이 App 서버에서 오는 접속만 받는다.
-- 계층 사이 접근은 AWS 보안 그룹으로 제한한다(Web 80 공개, App 8010은 Web만, DB 3306은 App만, App·DB SSH는 Web을 거쳐서만).
+- 계층 사이 접근은 AWS 보안 그룹으로 제한한다(Web 80 공개, App 8000은 Web만, DB 3306은 App만, App·DB SSH는 Web을 거쳐서만).
 - DB 사용자는 App 서버 주소에서만 접속할 수 있고 DROP 권한이 없다. DB 접속 정보는 App 서버의 .env(권한 600)에만 둔다.
 ### 개발 환경: WSL 한 대
 Nginx·FastAPI·MariaDB를 한 대에서 각자 실행한다(http://localhost:8080, http://eat.localhost). FastAPI는 127.0.0.1에서만 받는다.

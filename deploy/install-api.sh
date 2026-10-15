@@ -2,13 +2,14 @@
 # R15: App 서버(FastAPI) 설치·업데이트. 테이블이 없으면 만들고 빠진 열만 추가한 뒤(기존 데이터 유지) systemd로 8010 포트에서 실행한다.
 # 사용: 프로젝트 루트에서 sudo bash deploy/install-api.sh  (.env는 deploy/create-db.sh로 먼저 만든다)
 # 커밋된 코드(HEAD)만 설치된다. 커밋하지 않은 변경은 포함되지 않는다.
-# 서버 분리(R27): App 서버에서 sudo API_HOST=10.10.20.20 bash deploy/install-api.sh  (.env의 DB_HOST는 DB 서버 주소)
+# 서버 분리(R27): App 서버에서 sudo API_HOST=10.10.20.20 API_PORT=8000 bash deploy/install-api.sh  (.env의 DB_HOST는 DB 서버 주소)
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 APP_DIR=/opt/what-to-eat
 SERVICE=what-to-eat-api.service
 API_HOST="${API_HOST:-127.0.0.1}"   # API가 받는 주소. 기본은 같은 서버의 Nginx만 받는 127.0.0.1
+API_PORT="${API_PORT:-8010}"        # API 포트. 기본 8010(WSL은 8000을 flow-task가 쓴다), 분리 배포는 8000
 
 if [[ $EUID -ne 0 ]]; then
   echo "sudo로 실행하세요: sudo bash deploy/install-api.sh" >&2
@@ -20,6 +21,10 @@ if [[ ! -f "$REPO/.env" ]]; then
 fi
 if [[ ! "$API_HOST" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   echo "API_HOST는 IPv4 주소여야 합니다: $API_HOST" >&2
+  exit 1
+fi
+if [[ ! "$API_PORT" =~ ^[0-9]{2,5}$ ]]; then
+  echo "API_PORT는 숫자여야 합니다: $API_PORT" >&2
   exit 1
 fi
 
@@ -60,17 +65,17 @@ install -m 600 -o what-to-eat -g what-to-eat "$REPO/.env" "$APP_DIR/.env"
 echo "[5] 테이블 확인 (없는 테이블 생성, 빠진 열만 추가)"
 (cd "$APP_DIR" && runuser -u what-to-eat -- "$APP_DIR/.venv/bin/python" -m backend.init_db)
 
-echo "[6] systemd 등록·재시작 (받는 주소 $API_HOST:8010)"
-sed "s/--host 127\.0\.0\.1 /--host $API_HOST /" "$REPO/deploy/$SERVICE" > "/etc/systemd/system/$SERVICE"
+echo "[6] systemd 등록·재시작 (받는 주소 $API_HOST:$API_PORT)"
+sed -e "s/--host 127\.0\.0\.1 /--host $API_HOST /" -e "s/--port 8010$/--port $API_PORT/" "$REPO/deploy/$SERVICE" > "/etc/systemd/system/$SERVICE"
 systemctl daemon-reload
 systemctl enable "$SERVICE"
 systemctl restart "$SERVICE"
 
 echo "[7] 확인"
 for _ in $(seq 20); do
-  curl -fs http://$API_HOST:8010/api/health >/dev/null && break
+  curl -fs http://$API_HOST:$API_PORT/api/health >/dev/null && break
   sleep 0.5
 done
 systemctl is-active "$SERVICE"
-curl -s -w " %{http_code}\n" http://$API_HOST:8010/api/health
-curl -s -o /dev/null -w "/api/restaurants %{http_code}\n" http://$API_HOST:8010/api/restaurants
+curl -s -w " %{http_code}\n" http://$API_HOST:$API_PORT/api/health
+curl -s -o /dev/null -w "/api/restaurants %{http_code}\n" http://$API_HOST:$API_PORT/api/restaurants

@@ -5,7 +5,7 @@
 #       sudo bash deploy/install-web.sh
 # 다른 사이트(default, flow-task)는 건드리지 않는다.
 # 서버 분리(R27): Web 서버에서 sudo WEB_MODE=split bash deploy/install-web.sh
-#   what-to-eat-web-split.conf(80번 기본 사이트, /api/ → 10.10.20.20:8010)를 쓰고, Nginx 기본 환영 페이지(sites-enabled/default)는 끈다.
+#   what-to-eat-web-split.conf(80번 기본 사이트, /api/ → 10.10.20.20:8000)를 쓰고, Nginx 기본 환영 페이지(sites-enabled/default)는 끈다.
 #   Amazon Linux(dnf, sites-available 없음)에서는 /etc/nginx/conf.d/what-to-eat-web.conf로 설치한다.
 set -euo pipefail
 
