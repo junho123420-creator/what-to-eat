@@ -197,15 +197,19 @@ API 계약은 API-SPEC.md에 기록하고, 계약을 바꾸는 작업은 API-SPE
   가격대는 근거 있는 곳만(엉터리생고기 LOW), 지도 링크는 네이버 지도 검색 주소, 메모에 "방문 전 영업 여부 확인 필요". 이도곰탕 주소(논현로94길 29-5)를 기본 목록에만 반영.
   결과: defaults.py 검증 40곳 통과, DefaultRestaurantsTest·OwnerTest 통과. 실제 DB: python -m backend.add_defaults wnsgh2929 → 20곳 추가(20→40), 계정별 이름 중복 0.
   배포(사용자 실행, 16:41): install-api.sh. 결과: /opt/what-to-eat 기본 목록 40곳·auth.py가 저장소와 같음, 서비스 active, 8080 health 200.
-## 9장: 서버 분리 배포
-- [ ] R27: Web(10.10.10.10)·App(10.10.20.20)·DB(10.10.30.30) 3대 배포 스크립트. 기존 WSL 한 대 배포는 그대로 동작한다.
+## 9장: AWS EC2 3티어 배포 (PRD 운영 배포)
+- [x] R27: Web(10.10.10.10)·App(10.10.20.20)·DB(10.10.30.30) 3대 배포 스크립트. 기존 WSL 한 대 배포는 그대로 동작한다.
   확인: 각 서버 스크립트 문법, 단일 서버 기본값이 기존 설정과 같음, Nginx 분리 설정 nginx -t. 실제 서버 설치·통합 확인은 사용자 실행 후 기록.
-  기록(2026-10-15, 진행 중): AWS EC2 Ubuntu 3대. setup-db-server.sh(DB 서버, bind-address 10.10.30.30, 'what_to_eat_app'@'10.10.20.20', 기존 .env 비밀번호 그대로,
+  기록(2026-10-15): AWS EC2 Ubuntu 3대. setup-db-server.sh(DB 서버, bind-address 10.10.30.30, 'what_to_eat_app'@'10.10.20.20', 기존 .env 비밀번호 그대로,
   DB·사용자가 있으면 만들지 않음), install-api.sh에 API_HOST(기본 127.0.0.1), install-web.sh에 WEB_MODE=split(what-to-eat-web-split.conf, 80번 기본 사이트,
   /api/ → 10.10.20.20:8010), 순서·보안 그룹은 deploy/SPLIT.md.
   사전 확인(WSL): 스크립트 5개 bash -n 통과, API_HOST 기본값으로 만든 service가 기존 파일과 같음, 분리 설정 nginx -t 성공,
   같은 설정을 임시 Nginx(18081, /api/만 로컬 8010으로 바꿈)로 띄워 / ·깊은 경로 200, /api/health 200, /api/restaurants 401.
-  남은 일: 실제 EC2 3대 설치(사용자 실행)와 52.79.221.146에서 가입·로그인·등록 확인 후 완료 표시.
+  결과: 위 확인 항목 모두 통과(실제 EC2 설치는 R28).
+- [ ] R28: 실제 EC2 3대 설치와 운영 주소 통합 확인(사용자 실행, 순서는 deploy/SPLIT.md: DB → App → Web).
+  확인: DB 3306이 10.10.30.30에서만 대기, 사용자 what_to_eat_app@10.10.20.20만 있음. App 서비스 active, 10.10.20.20:8010 health 200·restaurants 401.
+  Web에서 http://52.79.221.146 / 200, /api/health 200, 가입 시 기본 맛집 40곳, 로그인·등록·추천, App 재시작 후 로그인·데이터 유지.
+  App·DB 공개 접근 불가, Web 서버에 .env 없음, Web·App 로그에 DB 비밀번호 없음.
 ## 운영 메모
 - 2026-10-14(사용자 요청): 포트 없이 접속하도록 Nginx 사이트에 80번 + server_name eat.localhost 추가(80번 기본 사이트는 flow-task 그대로).
   확인(임시 Nginx에 flow-task 설정과 함께 올림): nginx -t 성공, 80번 Host localhost·IP → Task Flow, eat.localhost → 오늘 뭐 먹지 화면·/api/health 200, 8080 그대로.
