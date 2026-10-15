@@ -6,6 +6,7 @@
 # 다른 사이트(default, flow-task)는 건드리지 않는다.
 # 서버 분리(R27): Web 서버에서 sudo WEB_MODE=split bash deploy/install-web.sh
 #   what-to-eat-web-split.conf(80번 기본 사이트, /api/ → 10.10.20.20:8010)를 쓰고, Nginx 기본 환영 페이지(sites-enabled/default)는 끈다.
+#   Amazon Linux(dnf, sites-available 없음)에서는 /etc/nginx/conf.d/what-to-eat-web.conf로 설치한다.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
@@ -37,7 +38,9 @@ if [[ -n "$(find "$REPO/frontend/src" "$REPO/frontend/index.html" -newer "$REPO/
 fi
 
 echo "[1] Nginx 확인"
-command -v nginx >/dev/null || apt-get install -y nginx
+if ! command -v nginx >/dev/null; then
+  if command -v dnf >/dev/null; then dnf install -y nginx; else apt-get install -y nginx; fi
+fi
 
 echo "[2] 정적 파일 → $WEB_DIR"
 rm -rf "$WEB_DIR"
@@ -45,12 +48,21 @@ mkdir -p "$WEB_DIR"
 cp -r "$REPO/frontend/dist/." "$WEB_DIR/"
 
 echo "[3] 사이트 설정 ($CONF)"
-cp "$REPO/deploy/$CONF" "/etc/nginx/sites-available/$SITE"
-# split: 이 서버 전용이라 80번 기본 사이트를 쓴다. 패키지 기본 사이트(링크만)를 끄고, 원본은 sites-available에 남긴다.
-[[ "$WEB_MODE" == split && -L /etc/nginx/sites-enabled/default ]] && rm /etc/nginx/sites-enabled/default
-ln -sf "/etc/nginx/sites-available/$SITE" "/etc/nginx/sites-enabled/$SITE"
+if [[ -d /etc/nginx/sites-available ]]; then
+  cp "$REPO/deploy/$CONF" "/etc/nginx/sites-available/$SITE"
+  # split: 이 서버 전용이라 80번 기본 사이트를 쓴다. 패키지 기본 사이트(링크만)를 끄고, 원본은 sites-available에 남긴다.
+  [[ "$WEB_MODE" == split && -L /etc/nginx/sites-enabled/default ]] && rm /etc/nginx/sites-enabled/default
+  ln -sf "/etc/nginx/sites-available/$SITE" "/etc/nginx/sites-enabled/$SITE"
+else
+  # Amazon Linux: nginx.conf가 conf.d/*.conf를 읽는다. nginx.conf의 환영 페이지 server에 default_server가 있으면 이 사이트와 겹친다.
+  if grep -Eq "^[^#]*listen[^;]*\b80\b[^;]*default_server" /etc/nginx/nginx.conf; then
+    echo "/etc/nginx/nginx.conf의 80번 server에 default_server가 있습니다. 그 단어를 지운 뒤 다시 실행하세요." >&2
+    exit 1
+  fi
+  cp "$REPO/deploy/$CONF" "/etc/nginx/conf.d/$SITE.conf"
+fi
 nginx -t
-systemctl enable nginx
+systemctl enable --now nginx
 systemctl reload nginx
 
 echo "[4] 확인"

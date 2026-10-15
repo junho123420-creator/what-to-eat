@@ -36,11 +36,22 @@ mkdir -p "$APP_DIR"
 rm -rf "$APP_DIR/backend"   # 업데이트 시 지워진 파일이 남지 않게 한다
 tar -xzf "$ARCHIVE" -C "$APP_DIR"
 
-echo "[3] 가상환경"
-[[ -x "$APP_DIR/.venv/bin/python" ]] || python3 -m venv "$APP_DIR/.venv" || {
-  echo "가상환경을 만들 수 없습니다. sudo apt-get install -y python3-venv 후 다시 실행하세요." >&2
-  exit 1
-}
+echo "[3] 가상환경 (Python 3.10 이상)"
+if [[ ! -x "$APP_DIR/.venv/bin/python" ]]; then
+  # Amazon Linux 2023 기본 python3는 3.9라서 python3.12·python3.11 패키지를 찾아 쓴다. PYTHON=경로 로 직접 지정할 수 있다.
+  PY=""
+  for c in ${PYTHON:-} python3 python3.13 python3.12 python3.11 python3.10; do
+    if command -v "$c" >/dev/null && "$c" -c 'import sys; sys.exit(sys.version_info < (3, 10))'; then PY="$c"; break; fi
+  done
+  if [[ -z "$PY" ]]; then
+    echo "Python 3.10 이상이 없습니다. Amazon Linux: sudo dnf install -y python3.12 / Ubuntu: sudo apt-get install -y python3-venv" >&2
+    exit 1
+  fi
+  "$PY" -m venv "$APP_DIR/.venv" || {
+    echo "가상환경을 만들 수 없습니다($PY). Ubuntu는 sudo apt-get install -y python3-venv 후 다시 실행하세요." >&2
+    exit 1
+  }
+fi
 "$APP_DIR/.venv/bin/pip" install -q -r "$APP_DIR/requirements.txt"
 
 echo "[4] .env (권한 600)"

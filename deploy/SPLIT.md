@@ -1,4 +1,4 @@
-# 서버 3대 분리 배포 (R27, AWS EC2 Ubuntu)
+# 서버 3대 분리 배포 (R27, AWS EC2 Amazon Linux 2023)
 
 | 계층 | 서버 | 주소 | 받는 포트 |
 |---|---|---|---|
@@ -8,6 +8,7 @@
 
 사용자는 `http://52.79.221.146`으로 접속한다. App·DB는 공개 주소 없이 프라이빗 주소로만 연결한다.
 기존 WSL 한 대 배포(`install-api.sh`, `install-web.sh` 기본값)는 그대로 쓸 수 있다.
+스크립트는 Amazon Linux 2023(dnf)과 Ubuntu(apt)를 모두 지원한다. MariaDB(`mariadb105-server`)·Nginx는 스크립트가 설치한다.
 
 ## 1. 보안 그룹
 - Web: 인바운드 TCP 80 `0.0.0.0/0`, TCP 22 내 IP.
@@ -17,19 +18,19 @@
 
 App·DB 서버는 Web 서버를 거쳐 접속한다(키 파일은 각자 경로로 바꾼다).
 ```
-ssh -i key.pem -J ubuntu@52.79.221.146 ubuntu@10.10.20.20
+ssh -i key.pem -J ec2-user@52.79.221.146 ec2-user@10.10.20.20
 ```
 
 ## 2. 코드 받기 (세 서버 모두)
 ```
-sudo apt-get update && sudo apt-get install -y git
+sudo dnf install -y git
 git clone https://github.com/junho123420-creator/what-to-eat.git && cd what-to-eat
 ```
 
 ## 3. DB 서버 (10.10.30.30)
 WSL의 `.env`를 복사한다(비밀번호는 그대로 쓴다). WSL에서:
 ```
-scp -J ubuntu@52.79.221.146 .env ubuntu@10.10.30.30:what-to-eat/.env
+scp -J ec2-user@52.79.221.146 .env ec2-user@10.10.30.30:what-to-eat/.env
 ```
 DB 서버에서:
 ```
@@ -42,13 +43,13 @@ sudo bash deploy/setup-db-server.sh
 ## 4. App 서버 (10.10.20.20)
 WSL에서 `.env`를 복사하고, App 서버에서 `DB_HOST`만 DB 서버 주소로 바꾼다.
 ```
-scp -J ubuntu@52.79.221.146 .env ubuntu@10.10.20.20:what-to-eat/.env
+scp -J ec2-user@52.79.221.146 .env ec2-user@10.10.20.20:what-to-eat/.env
 ```
 App 서버에서:
 ```
 chmod 600 .env
 sed -i 's/^DB_HOST=.*/DB_HOST=10.10.30.30/' .env
-sudo apt-get install -y python3-venv
+sudo dnf install -y python3.12   # 기본 python3(3.9)는 백엔드에 너무 낮다(3.10 이상 필요). 없으면 python3.11
 sudo API_HOST=10.10.20.20 bash deploy/install-api.sh
 ```
 확인: 서비스 active, `http://10.10.20.20:8010/api/health` 200, `/api/restaurants` 401(로그인 전).
@@ -57,7 +58,7 @@ sudo API_HOST=10.10.20.20 bash deploy/install-api.sh
 React 빌드는 Node가 있는 WSL에서 하고 결과만 복사한다. WSL에서:
 ```
 cd frontend && corepack npm@10.9.4 run build && cd ..
-scp -r frontend/dist ubuntu@52.79.221.146:what-to-eat/frontend/
+scp -r frontend/dist ec2-user@52.79.221.146:what-to-eat/frontend/
 ```
 Web 서버에서:
 ```

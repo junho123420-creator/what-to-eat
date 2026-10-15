@@ -206,6 +206,9 @@ API 계약은 API-SPEC.md에 기록하고, 계약을 바꾸는 작업은 API-SPE
   사전 확인(WSL): 스크립트 5개 bash -n 통과, API_HOST 기본값으로 만든 service가 기존 파일과 같음, 분리 설정 nginx -t 성공,
   같은 설정을 임시 Nginx(18081, /api/만 로컬 8010으로 바꿈)로 띄워 / ·깊은 경로 200, /api/health 200, /api/restaurants 401.
   결과: 위 확인 항목 모두 통과(실제 EC2 설치는 R28).
+  수정(2026-10-15): EC2가 Amazon Linux(ec2-user, git 없음)여서 dnf 지원 추가. install-api.sh는 Python 3.10 이상을 찾아 venv를 만들고(AL2023 기본 3.9 → python3.12),
+  setup-db-server.sh는 mariadb105-server·/etc/my.cnf.d/zz-what-to-eat.cnf, install-web.sh는 sites-available이 없으면 conf.d에 설치하고 nginx를 켠다.
+  확인: bash -n 통과, AL형 nginx.conf(conf.d 포함 + server_name _ 기본 server)와 함께 nginx -t 성공·IP/공개 주소 Host로 / 200·/api/health 200.
 - [ ] R28: 실제 EC2 3대 설치와 운영 주소 통합 확인(사용자 실행, 순서는 deploy/SPLIT.md: DB → App → Web).
   확인: DB 3306이 10.10.30.30에서만 대기, 사용자 what_to_eat_app@10.10.20.20만 있음. App 서비스 active, 10.10.20.20:8010 health 200·restaurants 401.
   Web에서 http://52.79.221.146 / 200, /api/health 200, 가입 시 기본 맛집 40곳, 로그인·등록·추천, App 재시작 후 로그인·데이터 유지.
