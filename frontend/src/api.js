@@ -41,13 +41,14 @@ async function request(method, path, body) {
   }
   const text = await response.text()
   let data = null
+  let parsed = true
   try {
     data = text ? JSON.parse(text) : null
   } catch {
     // Nginx·개발 서버가 API 대신 HTML 오류를 돌려준 경우
-    data = null
+    parsed = false
   }
-  if (response.ok && data === null && text) throw new ApiError(NETWORK_ERROR, response.status)
+  if (response.ok && !parsed) throw new ApiError(NETWORK_ERROR, response.status)
   if (response.status === 401 && !path.startsWith('/api/auth/')) unauthorizedHandler?.()
   if (!response.ok) throw new ApiError(errorMessage(response.status, data), response.status)
   return data
@@ -95,7 +96,7 @@ export function logout() {
   return request('POST', '/api/auth/logout')
 }
 
-// 로그인했으면 User, 아니면 null
+// 로그인했으면 User, 아니면 null. 서버는 로그인 전에 200 null을 주고, 401은 이전 서버 호환용이다.
 export async function currentUser() {
   try {
     return await request('GET', '/api/auth/me')

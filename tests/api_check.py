@@ -390,7 +390,7 @@ class AuthTest(unittest.TestCase):
         self.assertEqual(status, 201)
         self.assertEqual(set(body), {"id", "username", "created_at"})
         self.assertEqual(len(client.cookies), 0)  # 자동 로그인 없음
-        self.assertEqual(client.call("GET", "/api/auth/me"), (401, {"detail": "로그인이 필요합니다."}))
+        self.assertEqual(client.call("GET", "/api/auth/me"), (200, None))  # 로그인 전은 null
         status, body = client.call("POST", "/api/auth/login", {"username": name, "password": PASSWORD})
         self.assertEqual((status, body["username"]), (200, name))
         cookie = next(iter(client.cookies))
@@ -399,7 +399,7 @@ class AuthTest(unittest.TestCase):
         self.assertGreater(cookie.expires - time.time(), 7 * 86400 - 120)
         self.assertEqual(client.call("GET", "/api/auth/me")[1]["username"], name)
         self.assertEqual(client.call("POST", "/api/auth/logout"), (204, None))
-        self.assertEqual(client.call("GET", "/api/auth/me")[0], 401)
+        self.assertEqual(client.call("GET", "/api/auth/me"), (200, None))
         self.assertEqual(Client().call("POST", "/api/auth/logout"), (204, None))  # 로그인 안 해도 204
 
     def test_logout_ends_old_token(self):
@@ -411,7 +411,7 @@ class AuthTest(unittest.TestCase):
             stolen.cookies.set_cookie(cookie)
         self.assertEqual(stolen.call("GET", "/api/auth/me")[0], 200)
         client.call("POST", "/api/auth/logout")
-        self.assertEqual(stolen.call("GET", "/api/auth/me")[0], 401)  # 서버에서 세션이 지워짐
+        self.assertEqual(stolen.call("GET", "/api/auth/me"), (200, None))  # 서버에서 세션이 지워짐
 
     def test_duplicate_and_invalid(self):
         name = self.username()

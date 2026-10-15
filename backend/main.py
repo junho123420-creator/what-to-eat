@@ -77,9 +77,9 @@ def logout(request: Request) -> Response:
 
 
 @app.get("/api/auth/me")
-def me(user: Annotated[User, Depends(current_user)]) -> User:
-    """로그인한 사용자(F20)."""
-    return user
+def me(request: Request) -> User | None:
+    """로그인한 사용자(F20). 로그인하지 않았으면 null(브라우저 콘솔에 401 오류가 남지 않게 한다)."""
+    return auth_store.user_for_token(request.cookies.get(SESSION_COOKIE))
 
 
 @app.get("/api/restaurants")
